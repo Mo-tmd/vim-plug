@@ -2875,3 +2875,30 @@ endif
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Run plugin post-(update/install) hooks
+" Example usage:
+" call PluginPostHooks({'dir': 'fzf',                        'do': { -> fzf#install() }},
+"                   \  {'dir': 'mason.nvim',                 'do': ':MasonUpdate'},
+"                   \  {'dir': 'telescope-fzf-native.nvim',  'do': ':make'}
+"                   \ )
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! plug#post_hooks(...)
+  for Hook in a:000
+    execute 'cd' fnameescape(expand('$Dotfiles/nvim/pack/plugins/start/') . Hook.dir)
+    if type(Hook.do) == v:t_string
+      if Hook.do[0] == ':'
+        execute Hook.do[1:]
+      else
+        call s:bang(Hook.do)
+      endif
+    elseif type(Hook.do) == v:t_func
+      call Hook.do()
+    else
+      cd -
+      throw 'Invalid hook type'
+    endif
+    cd -
+  endfor
+endfunction
